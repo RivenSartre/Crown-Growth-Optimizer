@@ -51,7 +51,7 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
     Dis = (ub(1)-lb(1)) * 0.01;
     alpha = 2;
     M(1) = 1;
-    tcut = Max_iter/N;
+    tcut = Max_iter/N/2;
 
     X_temp = zeros(N,dim);
 
@@ -73,8 +73,7 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
             r1 = rand;
             k1 = randperm(5,1);
             for j = 1:size(X,2) 
-                X(index_s(i),j) = Pool(k1,j)+GR(index_s(i),j)*(r1*(X(index_s(i),j) - Best_pos(j))+(1-r1)*(X(index_s(i),j) - X_centroid(j)));
-                
+                X(index_s(i),j) = Pool(k1,j)+GR(index_s(i),j)*(r1*(Best_pos(j) - X(index_s(i),j))+(1-r1)*( X(index_s(i),j) - X_centroid(j)));
             end
         end
         
@@ -83,7 +82,7 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
             for i = 1:Ng
                 r2 = rand;
                 for j = 1:size(X,2) 
-                    X_temp(index_g(i),j) = X(index_g(i),j)+M(l)*GR(index_g(i),j)*(r2*(X(index_g(i),j) - Best_pos(j))+(1-r2)*( X_centroid(j) - X(index_g(i),j)));
+                    X_temp(index_g(i),j) = X(index_g(i),j)+M(l)*GR(index_g(i),j)*(r2*(Best_pos(j) - X(index_g(i),j))+(1-r2)*( X(index_g(i),j) - X_centroid(j)));
                 end
             end
             
@@ -144,7 +143,7 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
             sum1 = sum1+X(idx1(i),:);
         end
         half_best_mean = sum1/N_half;
-    
+        
         Pool(1,:) = Best_pos;
         Pool(2,:) = second_best;
         Pool(3,:) = third_best;

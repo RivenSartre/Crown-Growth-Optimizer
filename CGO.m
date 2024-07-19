@@ -6,7 +6,7 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
     end
     
     %% initialization X
-    X = initialization_CGO(N,dim,ub,lb);      % initialization
+    X = initialization_CGO(N,dim,ub,lb);      % initialization, Eq.1
     
     Best_fitness = inf;                       % Best fitness
     Objective_values = zeros(1,size(X,1));    % initialize fitness
@@ -19,7 +19,7 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
     end
     
     
-    % Elite pool
+    % Elite pool, Eq.9
     [~,idx1] = sort(Objective_values);
     Best_pos = X(idx1(1),:);
     second_best = X(idx1(2),:);
@@ -29,13 +29,13 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
     for i = 1:N_half
         sum1 = sum1+X(idx1(i),:);
     end
-    half_best_mean = sum1/N_half;
+    half_best_mean = sum1/N_half;           % Half centroid position, Eq.10
 
-    Pool = [];                              % Elite pool
+    Pool = [];                              % Elite pool, Eq.9
     Pool(1,:) = Best_pos;                   % Best position
     Pool(2,:) = second_best;                % 2nd best position
     Pool(3,:) = third_best;                 % 3rd best position
-    Pool(4,:) = half_best_mean;             % Half position
+    Pool(4,:) = half_best_mean;             % Half centroid position
     Pool(5,:) = mean(X);                    % Centroid position
     
     Convergence_curve(1) = fobj( Pool(1,:));
@@ -50,7 +50,7 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
     b  = 0.8;
     Dis = (ub(1)-lb(1)) * 0.01;
     alpha = 2;
-    M(1) = 1;
+    V(1) = 1;
     tcut = Max_iter/N/2;
 
     X_temp = zeros(N,dim);
@@ -58,11 +58,11 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
     %% main loop
     l = 2; 
     while l <= Max_iter
-        GR = randn(N,dim);          
-        M(l) = 1-0.85/( 1 + exp(-10*b*(2*l/(Max_iter)- 1)) );
+        GR = randn(N,dim);                  % Gaussian random number, Eq.4
+        V(l) = 1-0.85/( 1 + exp(-10*b*(2*l/(Max_iter)- 1)) );  % Branch growth velocity, Eq.2
     
         %% X_centroid
-        X_centroid = mean(X);
+        X_centroid = mean(X);               % Eq.6
 
         %% growing and Sprouting
         index_s = randperm(N,Ns);
@@ -73,7 +73,11 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
             r1 = rand;
             k1 = randperm(5,1);
             for j = 1:size(X,2) 
-                X(index_s(i),j) = Pool(k1,j)+GR(index_s(i),j)*(r1*(Best_pos(j) - X(index_s(i),j))+(1-r1)*( X(index_s(i),j) - X_centroid(j)));
+                % Sprouting vectors, Eq.11
+                VecS1 = Best_pos(j) - X(index_s(i),j);
+                VecS2 = X(index_s(i),j) - X_centroid(j);
+                % Sprouting stage, Eq.12
+                X(index_s(i),j) = Pool(k1,j)+GR(index_s(i),j)*( r1*VecS1 + (1-r1)*VecS2 );
             end
         end
         
@@ -82,11 +86,15 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
             for i = 1:Ng
                 r2 = rand;
                 for j = 1:size(X,2) 
-                    X_temp(index_g(i),j) = X(index_g(i),j)+M(l)*GR(index_g(i),j)*(r2*(Best_pos(j) - X(index_g(i),j))+(1-r2)*( X(index_g(i),j) - X_centroid(j)));
+                    % Growing vectors, Eq.3
+                    VecG1 = Best_pos(j) - X(index_g(i),j);
+                    VecG2 = X(index_g(i),j) - X_centroid(j);
+                    % Growing stage, Eq.5
+                    X_temp(index_g(i),j) = X(index_g(i),j)+V(l)*GR(index_g(i),j)*( r2*VecG1 + (1-r2)*VecG2 );
                 end
             end
             
-            % Calculate distance and repulsion
+            % Calculate distance and repulsion, Eq.7
             vec=zeros(N,dim);
             distances=zeros(N,1);
             for k=1:Ng
@@ -97,7 +105,7 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
                     end
                 end
                 Freq = sum(vec);
-                X(index_g(k),:) = X_temp(index_g(k),:) + Freq*alpha;
+                X(index_g(k),:) = X_temp(index_g(k),:) + Freq*alpha;   % Eq.8
             end
         end
         

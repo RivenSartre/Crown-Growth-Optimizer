@@ -48,14 +48,14 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
     Ns = floor(N*0.5);                      % Sprouting broach
     Ng = N-Ns;                              % Growing broach
     b  = 0.8;
-    Dis = (ub(1)-lb(1)) * 0.01;
+    Dis = 16;                               
     alpha = 2;
     V(1) = 1;
-    tcut = Max_iter/N/2;
+    tcut = Max_iter/N;
 
     X_temp = zeros(N,dim);
 
-    %% main loop
+    %% main loopc
     l = 2; 
     while l <= Max_iter
         GR = randn(N,dim);                  % Gaussian random number, Eq.4
@@ -99,7 +99,7 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
             distances=zeros(N,1);
             for k=1:Ng
                 for i=1:N
-                    distances(i) = sqrt(    sum( (X_temp(index_g(k), :) - X(i, :) ).^2  )     );
+                    distances(i) = sqrt( sum( (X_temp(index_g(k), :) - X(i, :) ).^2 ) );
                     if distances(k) < Dis
                         vec(i,:) = X_temp(index_g(k), :) - X(i, :);
                     end
@@ -129,7 +129,8 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
                 Best_fitness = Objective_values(1,i);
             end
         end
-        
+
+        %% Pruning mechanism
         if Ns < N && mod(l,tcut)==0
             Ns = Ns+1;
             Ng = Ng-1;

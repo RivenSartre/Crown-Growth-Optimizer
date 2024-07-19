@@ -55,7 +55,7 @@ function [Best_pos,Best_fitness,Convergence_curve]=CGO(N,Max_iter,lb,ub,dim,fobj
 
     X_temp = zeros(N,dim);
 
-    %% main loopc
+    %% main loop
     l = 2; 
     while l <= Max_iter
         GR = randn(N,dim);                  % Gaussian random number, Eq.4
